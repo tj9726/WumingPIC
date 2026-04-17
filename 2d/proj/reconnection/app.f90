@@ -368,7 +368,7 @@ contains
     real(8)            :: b_harris, bx_pert, by_pert
     real(8)            :: x, y
     real(8)            :: f1, f2
-    real(8)            :: sdi, sde  ! for Box-Mullter method
+    real(8)            :: sdi, sde  ! for Box-Muller method
 
     ! ---------------- Utility functions ------------------
     ! magnetic field strength
