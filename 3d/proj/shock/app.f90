@@ -145,7 +145,7 @@ contains
       ! check elapsed time
       etime = get_etime() - etime0
       if ( etime >= max_elapsed ) then
-        ! save snapshoft for restart
+        ! save snapshot for restart
         write(restart_file, '(i7.7, "_restart")') it
         call save_restart(up, uf, np2, nxs, nxe, it, restart_file)
 
@@ -607,7 +607,7 @@ contains
     type(json_file) :: file
     type(json_value), pointer :: root, p
 
-    ! save deafult parameters
+    ! save default parameters
     call io__param(n0, wpe, wpi, wge, wgi, vti, vte, filename)
 
     ! save additional parameters
