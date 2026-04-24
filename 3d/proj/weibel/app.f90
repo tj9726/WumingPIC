@@ -628,7 +628,7 @@ contains
     type(json_file) :: file
     type(json_value), pointer :: root, p
 
-    ! save deafult parameters
+    ! save default parameters
     call io__param(n0, wpe, wpi, wge, wgi, vti, vte, filename)
 
     ! save additional parameters

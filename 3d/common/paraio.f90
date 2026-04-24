@@ -324,7 +324,7 @@ contains
     call file%get(root)
 
     !
-    ! atttribute
+    ! attribute
     !
     call json%get(root, 'attribute', p)
 
@@ -703,7 +703,7 @@ contains
     call json%add(p, 'rawfile', trim(datafile))
 
     !
-    ! atttribute
+    ! attribute
     !
     call json%create_object(p, 'attribute')
     call json%add(root, p)
@@ -918,7 +918,7 @@ contains
     call json%add(p, 'rawfile', trim(datafile))
 
     !
-    ! atttribute
+    ! attribute
     !
     call json%create_object(p, 'attribute')
     call json%add(root, p)
