@@ -859,7 +859,7 @@ contains
     integer, intent(in) :: it
     integer, intent(in) :: np2(nys:nye,nzs:nze,nsp)
     real(8), intent(in) :: up(ndim,np,nys:nye,nzs:nze,nsp)
-    real(8), intent(in) :: uf(6,nxgs-2:nxge+2,nys-2:nye+2,nzs-2:nzs+2)
+    real(8), intent(in) :: uf(6,nxgs-2:nxge+2,nys-2:nye+2,nzs-2:nze+2)
 
     call write_particle(up, uf, np2, it, 1, '_orb')
 
