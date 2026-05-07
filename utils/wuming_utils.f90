@@ -73,8 +73,9 @@ contains
     implicit none
     real(8) :: y
     real(8) :: xx(2), rr
-    real(8), save :: yy
-    logical, save :: has_saved
+    real(8), save :: yy = 0d0
+    logical, save :: has_saved = .false.
+!$OMP THREADPRIVATE(yy,has_saved)
 
     if ( has_saved ) then
        y = yy
