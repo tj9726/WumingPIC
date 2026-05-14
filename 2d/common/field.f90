@@ -84,7 +84,7 @@ contains
 
        ! set boundary for potential
        subroutine set_boundary_phi(phi,nxs,nxe,nys,nye,l)
-         real(8), intent(inout) :: phi(nxs-1:nxe+1,nys-1:nye+1)
+         real(8), intent(inout) :: phi(nxs-2:nxe+2,nys-2:nye+2)
          integer, intent(in)    :: nxs, nxe, nys, nye, l
        end subroutine set_boundary_phi
     end interface
@@ -133,8 +133,8 @@ contains
                                                    -uf(1,i  ,j-1)                                           &
                                                    +uf(1,i-2,j  )-uf(1,i-1,j  )-uf(1,i+1,j  )+uf(1,i+2,j  ) &
                                                    -uf(1,i  ,j+1)                                           &
-                                                   +uf(1,i  ,i+2))                                          &
-                                        +2d0*beta*(+uf(1,i-1,j-1)-uf(1,i  ,j-1)+uf(1,i+1,i-1)               &
+                                                   +uf(1,i  ,j+2))                                          &
+                                        +2d0*beta*(+uf(1,i-1,j-1)-uf(1,i  ,j-1)+uf(1,i+1,j-1)               &
                                                    -uf(1,i-1,j  )-uf(1,i+1,j  )                             &
                                                    +uf(1,i-1,j+1)-uf(1,i  ,j+1)+uf(1,i+1,j+1))              &
                          +f3*((1d0-2d0*beta-3d0*delta)*(-uj(3,i  ,j-1)+uj(3,i  ,j  ))   &
@@ -152,8 +152,8 @@ contains
                                                    -uf(2,i  ,j-1)                                           &
                                                    +uf(2,i-2,j  )-uf(2,i-1,j  )-uf(2,i+1,j  )+uf(2,i+2,j  ) &
                                                    -uf(2,i  ,j+1)                                           &
-                                                   +uf(2,i  ,i+2))                                          &
-                                        +2d0*beta*(+uf(2,i-1,j-1)-uf(2,i  ,j-1)+uf(2,i+1,i-1)               &
+                                                   +uf(2,i  ,j+2))                                          &
+                                        +2d0*beta*(+uf(2,i-1,j-1)-uf(2,i  ,j-1)+uf(2,i+1,j-1)               &
                                                    -uf(2,i-1,j  )-uf(2,i+1,j  )                             &
                                                    +uf(2,i-1,j+1)-uf(2,i  ,j+1)+uf(2,i+1,j+1))              &
                          -f3*((1d0-2d0*beta-3d0*delta)*(-uj(3,i-1,j  )+uj(3,i  ,j  ))   &
@@ -171,8 +171,8 @@ contains
                                                    -uf(3,i  ,j-1)                                           &
                                                    +uf(3,i-2,j  )-uf(3,i-1,j  )-uf(3,i+1,j  )+uf(3,i+2,j  ) &
                                                    -uf(3,i  ,j+1)                                           &
-                                                   +uf(3,i  ,i+2))                                          &
-                                        +2d0*beta*(+uf(3,i-1,j-1)-uf(3,i  ,j-1)+uf(3,i+1,i-1)               &
+                                                   +uf(3,i  ,j+2))                                          &
+                                        +2d0*beta*(+uf(3,i-1,j-1)-uf(3,i  ,j-1)+uf(3,i+1,j-1)               &
                                                    -uf(3,i-1,j  )-uf(3,i+1,j  )                             &
                                                    +uf(3,i-1,j+1)-uf(3,i  ,j+1)+uf(3,i+1,j+1))              &
                          +f3*((1d0-2d0*beta-3d0*delta)*(-uj(2,i-1,j  )+uj(2,i  ,j  )    &
