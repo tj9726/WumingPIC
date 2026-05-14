@@ -511,9 +511,9 @@ contains
   subroutine boundary_periodic__phi(phi,nxs,nxe,nys,nye,l)
 
     integer, intent(in)    :: nxs, nxe, nys, nye, l
-    real(8), intent(inout) :: phi(nxs-1:nxe+1,nys-1:nye+1)
+    real(8), intent(inout) :: phi(nxs-2:nxe+2,nys-2:nye+2)
     integer                :: i, ii
-    real(8)                :: bff_snd(nxe-nxs+1), bff_rcv(nxe-nxs+1)
+    real(8)                :: bff_snd(2*(nxe-nxs+1)), bff_rcv(2*(nxe-nxs+1))
 
     if(.not.is_init)then
        write(6,*)'Initialize first by calling boundary_periodic__init()'
@@ -522,47 +522,53 @@ contains
 
 !$OMP PARALLEL DO PRIVATE(i,ii)
     do i=nxs,nxe
-       ii = i-nxs
+       ii = 2*(i-nxs)
        bff_snd(ii+1)  = phi(i,nys)
+       bff_snd(ii+2)  = phi(i,nys+1)
     enddo
 !$OMP END PARALLEL DO
 
-    call MPI_SENDRECV(bff_snd(1),nxe-nxs+1,mnpr,ndown,110, &
-                      bff_rcv(1),nxe-nxs+1,mnpr,nup  ,110, &
+    call MPI_SENDRECV(bff_snd(1),2*(nxe-nxs+1),mnpr,ndown,110, &
+                      bff_rcv(1),2*(nxe-nxs+1),mnpr,nup  ,110, &
                       ncomw,nstat,nerr)
 
 !$OMP PARALLEL
 
 !$OMP DO PRIVATE(i,ii)
     do i=nxs,nxe
-       ii = i-nxs
+       ii = 2*(i-nxs)
        phi(i,nye+1) = bff_rcv(ii+1)
+       phi(i,nye+2) = bff_rcv(ii+2)
     enddo
 !$OMP END DO NOWAIT
 
 !$OMP DO PRIVATE(i,ii)
     do i=nxs,nxe
-       ii = i-nxs
-       bff_snd(ii+1)  = phi(i,nye)
+       ii = 2*(i-nxs)
+       bff_snd(ii+1)  = phi(i,nye-1)
+       bff_snd(ii+2)  = phi(i,nye)
     enddo
 !$OMP END DO NOWAIT
 
 !$OMP END PARALLEL
 
-    call MPI_SENDRECV(bff_snd(1),nxe-nxs+1,mnpr,nup  ,100, &
-                      bff_rcv(1),nxe-nxs+1,mnpr,ndown,100, &
+    call MPI_SENDRECV(bff_snd(1),2*(nxe-nxs+1),mnpr,nup  ,100, &
+                      bff_rcv(1),2*(nxe-nxs+1),mnpr,ndown,100, &
                       ncomw,nstat,nerr)
 
 !$OMP PARALLEL DO PRIVATE(i,ii)
     do i=nxs,nxe
-       ii = i-nxs
-       phi(i,nys-1) = bff_rcv(ii+1)
+       ii = 2*(i-nxs)
+       phi(i,nys-2) = bff_rcv(ii+1)
+       phi(i,nys-1) = bff_rcv(ii+2)
     enddo
 !$OMP END PARALLEL DO
 
 !$OMP PARALLEL WORKSHARE
-    phi(nxs-1,nys-1:nye+1) = phi(nxe,nys-1:nye+1)
-    phi(nxe+1,nys-1:nye+1) = phi(nxs,nys-1:nye+1)
+    phi(nxs-2,nys-2:nye+2) = phi(nxe-1,nys-2:nye+2)
+    phi(nxs-1,nys-2:nye+2) = phi(nxe  ,nys-2:nye+2)
+    phi(nxe+1,nys-2:nye+2) = phi(nxs  ,nys-2:nye+2)
+    phi(nxe+2,nys-2:nye+2) = phi(nxs+1,nys-2:nye+2)
 !$OMP END PARALLEL WORKSHARE
 
   end subroutine boundary_periodic__phi

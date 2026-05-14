@@ -11,6 +11,7 @@ module field
   integer, save :: mnpr, ncomw, opsum
   integer       :: nerr
   real(8), parameter :: pi = 4.0D0*atan(1.0D0)
+  real(8), parameter :: beta = 0d0, delta = 0d0
   real(8), save :: delx, delt, u0, c, gfac_in, d_delx, d_delt, gfac
   real(8), save :: f1, f2, f3, f4, f5
   real(8), allocatable :: q(:), r(:)
@@ -125,22 +126,71 @@ contains
 !$OMP PARALLEL DO PRIVATE(i,j)
     do j=nys,nye
     do i=nxs,nxe
-       gkl(1,i,j) = +f2*(+uf(1,i,j-1)                          &
-                         +uf(1,i-1,j)-4.*uf(1,i,j)+uf(1,i+1,j) &
-                         +uf(1,i,j+1)                          &
-                         +f3*(-uj(3,i,j-1)+uj(3,i,j)) )        &
-                    -f1*(-uf(6,i,j-1)+uf(6,i,j))
-       gkl(2,i,j) = +f2*(+uf(2,i,j-1)                          &
-                         +uf(2,i-1,j)-4.*uf(2,i,j)+uf(2,i+1,j) &
-                         +uf(2,i,j+1)                          &
-                         -f3*(-uj(3,i-1,j)+uj(3,i,j)) )        &
-                    +f1*(-uf(6,i-1,j)+uf(6,i,j))
-       gkl(3,i,j) = +f2*(+uf(3,i,j-1)                          &
-                         +uf(3,i-1,j)-4.*uf(3,i,j)+uf(3,i+1,j) &
-                         +uf(3,i,j+1)                          &
-                         +f3*(-uj(2,i-1,j)+uj(2,i,j)           &
-                              +uj(1,i,j-1)-uj(1,i,j)) )        &
-                    -f1*(-uf(5,i-1,j)+uf(5,i,j)+uf(4,i,j-1)-uf(4,i,j))
+       gkl(1,i,j) = +f2*((1d0-2d0*beta-3d0*delta)*(+uf(1,i  ,j-1)                                           &
+                                                   +uf(1,i-1,j  )-4d0*uf(1,i  ,j  )+uf(1,i+1,j  )           &
+                                                   +uf(1,i  ,j+1))                                          &
+                                           +delta*(+uf(1,i  ,j-2)                                           &
+                                                   -uf(1,i  ,j-1)                                           &
+                                                   +uf(1,i-2,j  )-uf(1,i-1,j  )-uf(1,i+1,j  )+uf(1,i+2,j  ) &
+                                                   -uf(1,i  ,j+1)                                           &
+                                                   +uf(1,i  ,i+2))                                          &
+                                        +2d0*beta*(+uf(1,i-1,j-1)-uf(1,i  ,j-1)+uf(1,i+1,i-1)               &
+                                                   -uf(1,i-1,j  )-uf(1,i+1,j  )                             &
+                                                   +uf(1,i-1,j+1)-uf(1,i  ,j+1)+uf(1,i+1,j+1))              &
+                         +f3*((1d0-2d0*beta-3d0*delta)*(-uj(3,i  ,j-1)+uj(3,i  ,j  ))   &
+                                                +delta*(-uj(3,i  ,j-2)+uj(3,i  ,j+1))   & 
+                                                 +beta*(-uj(3,i+1,j-1)+uj(3,i+1,j  )    &  
+                                                        -uj(3,i-1,j-1)+uj(3,i-1,j  )))) &
+                    -f1*((1d0-2d0*beta-3d0*delta)*(-uf(6,i  ,j-1)+uf(6,i  ,j  )) &  
+                                           +delta*(-uf(6,i  ,j-2)+uf(6,i  ,j+1)) &
+                                            +beta*(-uf(6,i+1,j-1)+uf(6,i+1,j  )  &  
+                                                   -uf(6,i-1,j-1)+uf(6,i-1,j  )))
+       gkl(2,i,j) = +f2*((1d0-2d0*beta-3d0*delta)*(+uf(2,i  ,j-1)                                           &
+                                                   +uf(2,i-1,j  )-4d0*uf(2,i  ,j  )+uf(2,i+1,j  )           &
+                                                   +uf(2,i  ,j+1))                                          &
+                                           +delta*(+uf(2,i  ,j-2)                                           &
+                                                   -uf(2,i  ,j-1)                                           &
+                                                   +uf(2,i-2,j  )-uf(2,i-1,j  )-uf(2,i+1,j  )+uf(2,i+2,j  ) &
+                                                   -uf(2,i  ,j+1)                                           &
+                                                   +uf(2,i  ,i+2))                                          &
+                                        +2d0*beta*(+uf(2,i-1,j-1)-uf(2,i  ,j-1)+uf(2,i+1,i-1)               &
+                                                   -uf(2,i-1,j  )-uf(2,i+1,j  )                             &
+                                                   +uf(2,i-1,j+1)-uf(2,i  ,j+1)+uf(2,i+1,j+1))              &
+                         -f3*((1d0-2d0*beta-3d0*delta)*(-uj(3,i-1,j  )+uj(3,i  ,j  ))   &
+                                                +delta*(-uj(3,i-2,j  )+uj(3,i+1,j  ))   &
+                                                 +beta*(-uj(3,i-1,j+1)+uj(3,i  ,j+1)    &
+                                                        -uj(3,i-1,j-1)+uj(3,i  ,j-1)))) &
+                    +f1*((1d0-2d0*beta-3d0*delta)*(-uf(6,i-1,j  )+uf(6,i  ,j  )) &
+                                           +delta*(-uf(6,i-2,j  )+uf(6,i+1,j  )) &
+                                            +beta*(-uf(6,i-1,j+1)+uf(6,i  ,j+1)  &
+                                                   -uf(6,i-1,j-1)+uf(6,i  ,j-1)))
+       gkl(3,i,j) = +f2*((1d0-2d0*beta-3d0*delta)*(+uf(3,i  ,j-1)                                           &
+                                                   +uf(3,i-1,j  )-4d0*uf(3,i  ,j  )+uf(3,i+1,j  )           &
+                                                   +uf(3,i  ,j+1))                                          &
+                                           +delta*(+uf(3,i  ,j-2)                                           &
+                                                   -uf(3,i  ,j-1)                                           &
+                                                   +uf(3,i-2,j  )-uf(3,i-1,j  )-uf(3,i+1,j  )+uf(3,i+2,j  ) &
+                                                   -uf(3,i  ,j+1)                                           &
+                                                   +uf(3,i  ,i+2))                                          &
+                                        +2d0*beta*(+uf(3,i-1,j-1)-uf(3,i  ,j-1)+uf(3,i+1,i-1)               &
+                                                   -uf(3,i-1,j  )-uf(3,i+1,j  )                             &
+                                                   +uf(3,i-1,j+1)-uf(3,i  ,j+1)+uf(3,i+1,j+1))              &
+                         +f3*((1d0-2d0*beta-3d0*delta)*(-uj(2,i-1,j  )+uj(2,i  ,j  )    &
+                                                        +uj(1,i  ,j-1)-uj(1,i  ,j  ))   & 
+                                                +delta*(-uj(2,i-2,j  )+uj(2,i+1,j  )    &
+                                                        +uj(1,i  ,j-2)-uj(1,i  ,j+1))   &
+                                                 +beta*(-uj(2,i-1,j+1)+uj(2,i  ,j+1)    &   
+                                                        -uj(2,i-1,j-1)+uj(2,i  ,j-1)    &
+                                                        +uj(1,i+1,j-1)-uj(1,i+1,j  )    &
+                                                        +uj(1,i-1,j-1)-uj(1,i-1,j  )))) &
+                    -f1*((1d0-2d0*beta-3d0*delta)*(-uf(5,i-1,j  )+uf(5,i  ,j  )  &
+                                                   +uf(4,i  ,j-1)-uf(4,i  ,j  )) &
+                                           +delta*(-uf(5,i-2,j  )+uf(5,i+1,j  )  &  
+                                                   +uf(4,i  ,j-2)-uf(4,i  ,j+1)) &
+                                            +beta*(-uf(5,i-1,j+1)+uf(5,i  ,j+1)  &
+                                                   -uf(5,i-1,j-1)+uf(5,i  ,j-1)  &
+                                                   +uf(4,i+1,j-1)-uf(4,i+1,j  )  &
+                                                   +uf(4,i-1,j-1)-uf(4,i-1,j  )))
     enddo
     enddo
 !$OMP END PARALLEL DO
@@ -326,7 +376,7 @@ contains
     interface
        ! set boundary for potential
        subroutine set_boundary_phi(phi,nxs,nxe,nys,nye,l)
-         real(8), intent(inout) :: phi(nxs-1:nxe+1,nys-1:nye+1)
+         real(8), intent(inout) :: phi(nxs-2:nxe+2,nys-2:nye+2)
          integer, intent(in)    :: nxs, nxe, nys, nye, l
        end subroutine set_boundary_phi
     end interface
@@ -339,7 +389,7 @@ contains
     real(8), parameter :: err = 1d-6 
     real(8)            :: eps, sumr, sum, sum1, sum2, av, bv
     real(8)            :: sumr_g, sum_g, sum1_g, sum2_g
-    real(8)            :: phi(nxs-1:nxe+1,nys-1:nye+1), p(nxs-1:nxe+1,nys-1:nye+1)
+    real(8)            :: phi(nxs-2:nxe+2,nys-2:nye+2), p(nxs-2:nxe+2,nys-2:nye+2)
     real(8)            :: r(nxs:nxe,nys:nye), b(nxs:nxe,nys:nye)
     real(8)            :: ap(nxs:nxe,nys:nye)
     real(8)            :: bff_snd(2), bff_rcv(2)
@@ -371,9 +421,18 @@ contains
 !$OMP PARALLEL DO PRIVATE(i,j) REDUCTION(+:sumr)
        do j=nys,nye
        do i=nxs,nxe
-          r(i,j) = b(i,j)+phi(i,j-1)                    &
-                         +phi(i-1,j)-f4*phi(i,j)+phi(i+1,j) &
-                         +phi(i,j+1)
+          r(i,j) = b(i,j)+f5*phi(i,j)                                                              &
+                   -(1d0-2d0*beta-3d0*delta)*(+phi(i  ,j-1)                                        &
+                                              +phi(i-1,j  )-4d0*phi(i  ,j  )+phi(i+1,j  )          &
+                                              +phi(i  ,j+1))                                       &
+                                      +delta*(+phi(i  ,j-2)                                        &
+                                              -phi(i  ,j-1)                                        &
+                                              +phi(i-2,j  )-phi(i-1,j  )-phi(i+1,j  )+phi(i+2,j  ) &
+                                              -phi(i  ,j+1)                                        &
+                                              +phi(i  ,j+2))                                       &
+                                   +2d0*beta*(+phi(i-1,j-1)-phi(i  ,j-1)+phi(i+1,j-1)              &
+                                              -phi(i-1,j  )-phi(i+1,j  )                           &
+                                              +phi(i-1,j+1)-phi(i  ,j+1)+phi(i+1,j+1))
           p(i,j) = r(i,j)
           sumr = sumr+r(i,j)*r(i,j)
        enddo
@@ -397,9 +456,17 @@ contains
 !$OMP PARALLEL DO PRIVATE(i,j) REDUCTION(+:sumr,sum2)
              do j=nys,nye
              do i=nxs,nxe
-                ap(i,j) = -p(i,j-1)                    &
-                          -p(i-1,j)+f4*p(i,j)-p(i+1,j) &
-                          -p(i,j+1)
+                ap(i,j) = f5*p(i,j)-(1d0-2d0*beta-3d0*delta)*(+p(i  ,j-1)                                  &
+                                                              +p(i-1,j  )-4d0*p(i  ,j  )+p(i+1,j  )        &
+                                                              +p(i  ,j+1))                                 &
+                                                      +delta*(+p(i  ,j-2)                                  &
+                                                              -p(i  ,j-1)                                  &
+                                                              +p(i-2,j  )-p(i-1,j  )-p(i+1,j  )+p(i+2,j  ) &
+                                                              -p(i  ,j+1)                                  &
+                                                              +p(i  ,j+2))                                 &
+                                                   +2d0*beta*(+p(i-1,j-1)-p(i  ,j-1)+p(i+1,j-1)            &
+                                                              -p(i-1,j  )-p(i+1,j  )                       &
+                                                              +p(i-1,j+1)-p(i  ,j+1)+p(i+1,j+1))
                 sumr = sumr+r(i,j)*r(i,j)
                 sum2 = sum2+p(i,j)*ap(i,j)
              enddo
@@ -417,7 +484,7 @@ contains
 !$OMP PARALLEL DO PRIVATE(i,j)
              do j=nys,nye
              do i=nxs,nxe
-                phi(i,j) = phi(i,j)+av* p(i,j)
+                phi(i,j) = phi(i,j)+av*p(i,j)
                 r(i,j) = r(i,j)-av*ap(i,j)
              enddo
              enddo
