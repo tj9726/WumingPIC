@@ -459,12 +459,12 @@ contains
                 ap(i,j) = f5*p(i,j)-(1d0-2d0*beta-3d0*delta)*(+p(i  ,j-1)                                  &
                                                               +p(i-1,j  )-4d0*p(i  ,j  )+p(i+1,j  )        &
                                                               +p(i  ,j+1))                                 &
-                                                      +delta*(+p(i  ,j-2)                                  &
+                                                      -delta*(+p(i  ,j-2)                                  &
                                                               -p(i  ,j-1)                                  &
                                                               +p(i-2,j  )-p(i-1,j  )-p(i+1,j  )+p(i+2,j  ) &
                                                               -p(i  ,j+1)                                  &
                                                               +p(i  ,j+2))                                 &
-                                                   +2d0*beta*(+p(i-1,j-1)-p(i  ,j-1)+p(i+1,j-1)            &
+                                                   -2d0*beta*(+p(i-1,j-1)-p(i  ,j-1)+p(i+1,j-1)            &
                                                               -p(i-1,j  )-p(i+1,j  )                       &
                                                               +p(i-1,j+1)-p(i  ,j+1)+p(i+1,j+1))
                 sumr = sumr+r(i,j)*r(i,j)
