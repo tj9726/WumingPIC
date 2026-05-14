@@ -243,7 +243,7 @@ contains
     call json%get(p, 'v_thi', v_thi)
     call json%get(p, 'gam0', gam0)
     call json%get(p, 'theta_bn', theta_bn)
-    call json%get(p, 'phi_bn', phi_bn)
+    call json%get(p, 'phi_bn', phi_bn) 
 
     nproc = num_process
     nx    = n_x
@@ -256,6 +256,9 @@ contains
     nyge  = nygs + ny - 1
     nxs   = nxgs
     nxe   = nxge
+
+    theta_bn = theta_bn * pi / 1.8d2
+    phi_bn   = phi_bn   * pi / 1.8d2
 
     call json%serialize(root, config_string)
     call json%destroy()

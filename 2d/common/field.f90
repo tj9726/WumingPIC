@@ -421,8 +421,8 @@ contains
 !$OMP PARALLEL DO PRIVATE(i,j) REDUCTION(+:sumr)
        do j=nys,nye
        do i=nxs,nxe
-          r(i,j) = b(i,j)+f5*phi(i,j)                                                              &
-                   -(1d0-2d0*beta-3d0*delta)*(+phi(i  ,j-1)                                        &
+          r(i,j) = b(i,j)-f5*phi(i,j)                                                              &
+                   +(1d0-2d0*beta-3d0*delta)*(+phi(i  ,j-1)                                        &
                                               +phi(i-1,j  )-4d0*phi(i  ,j  )+phi(i+1,j  )          &
                                               +phi(i  ,j+1))                                       &
                                       +delta*(+phi(i  ,j-2)                                        &
