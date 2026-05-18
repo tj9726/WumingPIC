@@ -4,7 +4,7 @@ module particle
 
   private
 
-  public :: particle__init, particle__solv, particle__solv_vay
+  public :: particle__init, particle__solv, particle__solv_vay, particle__solv_lapenta
 
   logical, save :: is_init = .false.
   integer, save :: ndim, np, nsp, nxgs, nxge, nygs, nyge, nys, nye
@@ -314,5 +314,165 @@ contains
 
   end subroutine particle__solv_vay
 
+
+  subroutine particle__solv_lapenta(gp,up,uf,cumcnt,nxs,nxe)
+
+    ! 
+    ! Lapenta solver
+    ! 
+    integer, intent(in)  :: nxs, nxe
+    integer, intent(in)  :: cumcnt(nxgs:nxge+1,nys:nye,nsp)
+    real(8), intent(in)  :: up(ndim,np,nys:nye,nsp)
+    real(8), intent(in)  :: uf(6,nxgs-2:nxge+2,nys-2:nye+2)
+    real(8), intent(out) :: gp(ndim,np,nys:nye,nsp)
+    
+
+    integer :: i, j, ii, isp
+    real(8) :: dh, sh(-1:1,2)
+    real(8) :: fac1, gam, gam2
+    real(8) :: bpx, bpy, bpz, epx, epy, epz, bp2
+    real(8) :: uvm1, uvm2, uvm3, uvm4, uvm5, uvm6
+    real(8) :: ucrossbx, ucrossby, ucrossbz, udotb, udote, bdote
+    real(8) :: xi, eta, zeta, fac_p, fac_q, fac_r, fac_s, fac_t, fac_u
+    real(8) :: tmp(1:6,nxs-1:nxe+1,nys-1:nye+1)
+
+    if(.not.is_init)then
+       write(6,*)'Initialize first by calling particle__init()'
+       stop
+    endif
+    
+!$OMP PARALLEL DO PRIVATE(i,j) 
+    do j=nys-1,nye+1
+    do i=nxs-1,nxe+1
+       tmp(1,i,j) = 0.5*(+uf(1,i,j)+uf(1,i,j+1))
+       tmp(2,i,j) = 0.5*(+uf(2,i,j)+uf(2,i+1,j))
+       tmp(3,i,j) = 0.25*(+uf(3,i,j)  +uf(3,i+1,j) &
+                          +uf(3,i,j+1)+uf(3,i+1,j+1))
+       tmp(4,i,j) = 0.5*(+uf(4,i,j)+uf(4,i+1,j))
+       tmp(5,i,j) = 0.5*(+uf(5,i,j)+uf(5,i,j+1))
+       tmp(6,i,j) = uf(6,i,j)
+    enddo
+    enddo
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO PRIVATE(ii,i,j,isp,sh,dh,fac1,gam,gam2, &
+!$OMP                     bpx,bpy,bpz,epx,epy,epz,bp2,uvm1,uvm2,uvm3,uvm4,uvm5,uvm6, &
+!$OMP                     ucrossbx,ucrossby,ucrossbz,udotb,udote,bdote,xi,eta,zeta,fac_p,fac_q,fac_r,fac_s,fac_t,fac_u)
+    do j=nys,nye
+    do i=nxs,nxe
+
+       do isp=1,nsp
+
+          fac1 = q(isp)/r(isp)*0.5*delt
+
+          do ii=cumcnt(i,j,isp)+1,cumcnt(i+1,j,isp)
+
+             !second order shape function
+             dh = up(1,ii,j,isp)*d_delx-0.5-i
+             sh(-1,1) = 0.5*(0.5-dh)*(0.5-dh)
+             sh( 0,1) = 0.75-dh*dh
+             sh(+1,1) = 0.5*(0.5+dh)*(0.5+dh)
+
+             dh = up(2,ii,j,isp)*d_delx-0.5-j
+             sh(-1,2) = 0.5*(0.5-dh)*(0.5-dh)
+             sh( 0,2) = 0.75-dh*dh
+             sh(+1,2) = 0.5*(0.5+dh)*(0.5+dh)
+
+             bpx = +(+tmp(1,i-1,j-1)*sh(-1,1)+tmp(1,i,j-1)*sh(0,1)+tmp(1,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(1,i-1,j  )*sh(-1,1)+tmp(1,i,j  )*sh(0,1)+tmp(1,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(1,i-1,j+1)*sh(-1,1)+tmp(1,i,j+1)*sh(0,1)+tmp(1,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             bpy = +(+tmp(2,i-1,j-1)*sh(-1,1)+tmp(2,i,j-1)*sh(0,1)+tmp(2,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(2,i-1,j  )*sh(-1,1)+tmp(2,i,j  )*sh(0,1)+tmp(2,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(2,i-1,j+1)*sh(-1,1)+tmp(2,i,j+1)*sh(0,1)+tmp(2,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             bpz = +(+tmp(3,i-1,j-1)*sh(-1,1)+tmp(3,i,j-1)*sh(0,1)+tmp(3,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(3,i-1,j  )*sh(-1,1)+tmp(3,i,j  )*sh(0,1)+tmp(3,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(3,i-1,j+1)*sh(-1,1)+tmp(3,i,j+1)*sh(0,1)+tmp(3,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             epx = +(+tmp(4,i-1,j-1)*sh(-1,1)+tmp(4,i,j-1)*sh(0,1)+tmp(4,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(4,i-1,j  )*sh(-1,1)+tmp(4,i,j  )*sh(0,1)+tmp(4,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(4,i-1,j+1)*sh(-1,1)+tmp(4,i,j+1)*sh(0,1)+tmp(4,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             epy = +(+tmp(5,i-1,j-1)*sh(-1,1)+tmp(5,i,j-1)*sh(0,1)+tmp(5,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(5,i-1,j  )*sh(-1,1)+tmp(5,i,j  )*sh(0,1)+tmp(5,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(5,i-1,j+1)*sh(-1,1)+tmp(5,i,j+1)*sh(0,1)+tmp(5,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             epz = +(+tmp(6,i-1,j-1)*sh(-1,1)+tmp(6,i,j-1)*sh(0,1)+tmp(6,i+1,j-1)*sh(+1,1))*sh(-1,2) &
+                   +(+tmp(6,i-1,j  )*sh(-1,1)+tmp(6,i,j  )*sh(0,1)+tmp(6,i+1,j  )*sh(+1,1))*sh( 0,2) &
+                   +(+tmp(6,i-1,j+1)*sh(-1,1)+tmp(6,i,j+1)*sh(0,1)+tmp(6,i+1,j+1)*sh(+1,1))*sh(+1,2)
+
+             bpx = fac1*bpx/c
+             bpy = fac1*bpy/c
+             bpz = fac1*bpz/c
+             bp2 = bpx*bpx + bpy*bpy + bpz*bpz
+             
+             epx = fac1*epx
+             epy = fac1*epy
+             epz = fac1*epz
+
+             uvm1 = up(3,ii,j,isp)
+             uvm2 = up(4,ii,j,isp)
+             uvm3 = up(5,ii,j,isp)
+
+             gam = sqrt(1d0+(uvm1*uvm1+uvm2*uvm2+uvm3*uvm3)/(c*c))
+             gam2 = gam*gam
+
+             uvm4 = uvm1 + epx
+             uvm5 = uvm2 + epy
+             uvm6 = uvm3 + epz
+
+             ucrossbx = uvm5*bpz-uvm6*bpy
+             ucrossby = uvm6*bpx-uvm4*bpz
+             ucrossbz = uvm4*bpy-uvm5*bpx
+
+             udotb = uvm4*bpx+uvm5*bpy+uvm6*bpz
+             udote = uvm4*epx+uvm5*epy+uvm6*epz
+             bdote = bpx*epx +bpy*epy +bpz*epz
+
+             xi = udote/(c*c) - bp2
+             eta = (ucrossbx*epx+ucrossby*epy+ucrossbz*epz)/(c*c) + bp2*gam
+             zeta = udote*bdote/(c*c)
+
+             fac_s = xi*xi - 3d0 * eta * gam - 1.2d1 * zeta
+             fac_u = -2d0*xi**3 + 9d0*xi*eta*gam - 7.2d1*xi*zeta + 2.7d1*(eta*eta-zeta*gam2)
+             
+             if (fac_u + sqrt(fac_u*fac_u-4d0*fac_s**3) > 0d0) then
+                fac_t = (5d-1 * (fac_u + sqrt(fac_u*fac_u - 4d0*fac_s**3)))**(1d0/3d0)
+                
+                fac_p = 2d0*xi/3d0 + 2.5d-1*gam2
+                fac_q = 4d0*xi*gam + 8d0*eta + gam**3
+                fac_r = (fac_s/fac_t + fac_t)/3d0
+                  
+                if (2d0*fac_p+2.5d-1*fac_q/sqrt(fac_p+fac_r)-fac_r > 0d0) then
+                   gam = 2.5d-1*gam                                                &
+                        +5d-1*sqrt(2d0*fac_p+2.5d-1*fac_q/sqrt(fac_p+fac_r)-fac_r) &
+                        +5d-1*sqrt(fac_p+fac_r)
+                   gam2 = gam*gam
+                endif
+             endif
+
+             !accel.
+             gp(3,ii,j,isp) = 2d0*(uvm4+udotb*bpx/gam2+ucrossbx/gam)/(1d0+bp2/gam2)-uvm1
+             gp(4,ii,j,isp) = 2d0*(uvm5+udotb*bpy/gam2+ucrossby/gam)/(1d0+bp2/gam2)-uvm2
+             gp(5,ii,j,isp) = 2d0*(uvm6+udotb*bpz/gam2+ucrossbz/gam)/(1d0+bp2/gam2)-uvm3
+
+             gp(1,ii,j,isp) = up(1,ii,j,isp)+gp(3,ii,j,isp)*delt*gam
+             gp(2,ii,j,isp) = up(2,ii,j,isp)+gp(4,ii,j,isp)*delt*gam
+          enddo
+       
+       enddo
+
+    enddo
+    enddo
+!$OMP END PARALLEL DO
+
+    if(ndim == 6)then
+!$OMP PARALLEL WORKSHARE
+      gp(6,:,:,:) = up(6,:,:,:)
+!$OMP END PARALLEL WORKSHARE
+    endif
+
+      end subroutine particle__solv_lapenta
 
 end module particle
