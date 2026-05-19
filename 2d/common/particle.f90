@@ -326,14 +326,15 @@ contains
     real(8), intent(in)  :: uf(6,nxgs-2:nxge+2,nys-2:nye+2)
     real(8), intent(out) :: gp(ndim,np,nys:nye,nsp)
     
-
-    integer :: i, j, ii, isp
+    integer, parameter :: iter_max = 100
+    integer :: i, j, ii, isp, iter
+    real(8), parameter :: tol = 1d-10
     real(8) :: dh, sh(-1:1,2)
     real(8) :: fac1, gam, gam2
     real(8) :: bpx, bpy, bpz, epx, epy, epz, bp2
     real(8) :: uvm1, uvm2, uvm3, uvm4, uvm5, uvm6
     real(8) :: ucrossbx, ucrossby, ucrossbz, udotb, udote, bdote
-    real(8) :: xi, eta, zeta, fac_p, fac_q, fac_r, fac_s, fac_t, fac_u
+    real(8) :: xi, eta, zeta, gold, gnew, fg, dfg
     real(8) :: tmp(1:6,nxs-1:nxe+1,nys-1:nye+1)
 
     if(.not.is_init)then
@@ -355,9 +356,9 @@ contains
     enddo
 !$OMP END PARALLEL DO
 
-!$OMP PARALLEL DO PRIVATE(ii,i,j,isp,sh,dh,fac1,gam,gam2, &
+!$OMP PARALLEL DO PRIVATE(ii,i,j,iter,isp,sh,dh,fac1,gam,gam2, &
 !$OMP                     bpx,bpy,bpz,epx,epy,epz,bp2,uvm1,uvm2,uvm3,uvm4,uvm5,uvm6, &
-!$OMP                     ucrossbx,ucrossby,ucrossbz,udotb,udote,bdote,xi,eta,zeta,fac_p,fac_q,fac_r,fac_s,fac_t,fac_u)
+!$OMP                     ucrossbx,ucrossby,ucrossbz,udotb,udote,bdote,xi,eta,zeta,gold,gnew,fg,dfg)
     do j=nys,nye
     do i=nxs,nxe
 
@@ -416,7 +417,6 @@ contains
              uvm3 = up(5,ii,j,isp)
 
              gam = sqrt(1d0+(uvm1*uvm1+uvm2*uvm2+uvm3*uvm3)/(c*c))
-             gam2 = gam*gam
 
              uvm4 = uvm1 + epx
              uvm5 = uvm2 + epy
@@ -434,23 +434,19 @@ contains
              eta = (ucrossbx*epx+ucrossby*epy+ucrossbz*epz)/(c*c) + bp2*gam
              zeta = udotb*bdote/(c*c)
 
-             fac_s = xi*xi - 3d0 * eta * gam - 1.2d1 * zeta
-             fac_u = -2d0*xi**3 + 9d0*xi*eta*gam - 7.2d1*xi*zeta + 2.7d1*(eta*eta-zeta*gam2)
+             gold = 1.1d0 * (gam + sqrt(epx*epx+epy*epy+epz*epz)/c)
              
-             if (fac_u + sqrt(fac_u*fac_u-4d0*fac_s**3) > 0d0) then
-                fac_t = (5d-1 * (fac_u + sqrt(fac_u*fac_u - 4d0*fac_s**3)))**(1d0/3d0)
-                
-                fac_p = 2d0*xi/3d0 + 2.5d-1*gam2
-                fac_q = 4d0*xi*gam + 8d0*eta + gam**3
-                fac_r = (fac_s/fac_t + fac_t)/3d0
-                  
-                if (2d0*fac_p+2.5d-1*fac_q/sqrt(fac_p+fac_r)-fac_r > 0d0) then
-                   gam = 2.5d-1*gam                                                &
-                        +5d-1*sqrt(2d0*fac_p+2.5d-1*fac_q/sqrt(fac_p+fac_r)-fac_r) &
-                        +5d-1*sqrt(fac_p+fac_r)
-                   gam2 = gam*gam
+             do iter=1,iter_max
+                fg = -gold**4+gam*gold**3+xi*gold**2+eta*gold+zeta
+                dfg = -4d0*gold**3+3d0*gam*gold**2+2d0*xi*gold+eta
+                gnew = gold - fg/dfg
+                if(abs(gnew-gold)/gnew < tol) then 
+                  gam = gnew 
+                  gam2 = gam*gam
+                  exit
                 endif
-             endif
+                gold = gnew
+             enddo
 
              !accel.
              gp(3,ii,j,isp) = 2d0*(uvm4+udotb*bpx/gam2+ucrossbx/gam)/(1d0+bp2/gam2)-uvm1
