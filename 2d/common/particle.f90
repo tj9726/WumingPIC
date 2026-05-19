@@ -432,7 +432,7 @@ contains
 
              xi = udote/(c*c) - bp2
              eta = (ucrossbx*epx+ucrossby*epy+ucrossbz*epz)/(c*c) + bp2*gam
-             zeta = udote*bdote/(c*c)
+             zeta = udotb*bdote/(c*c)
 
              fac_s = xi*xi - 3d0 * eta * gam - 1.2d1 * zeta
              fac_u = -2d0*xi**3 + 9d0*xi*eta*gam - 7.2d1*xi*zeta + 2.7d1*(eta*eta-zeta*gam2)
