@@ -457,8 +457,8 @@ contains
              gp(4,ii,j,isp) = 2d0*(uvm5+udotb*bpy/gam2+ucrossby/gam)/(1d0+bp2/gam2)-uvm2
              gp(5,ii,j,isp) = 2d0*(uvm6+udotb*bpz/gam2+ucrossbz/gam)/(1d0+bp2/gam2)-uvm3
 
-             gp(1,ii,j,isp) = up(1,ii,j,isp)+gp(3,ii,j,isp)*delt*gam
-             gp(2,ii,j,isp) = up(2,ii,j,isp)+gp(4,ii,j,isp)*delt*gam
+             gp(1,ii,j,isp) = up(1,ii,j,isp)+gp(3,ii,j,isp)*delt/gam
+             gp(2,ii,j,isp) = up(2,ii,j,isp)+gp(4,ii,j,isp)*delt/gam
           enddo
        
        enddo
